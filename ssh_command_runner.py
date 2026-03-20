@@ -1048,12 +1048,25 @@ def main() -> int:
         return 1
 
 
+def running_under_debugger() -> bool:
+    # Generic runtime debugger hook used by debuggers and tracers.
+    if sys.gettrace() is not None:
+        return True
+    # VS Code / debugpy launcher marker.
+    if os.getenv("DEBUGPY_LAUNCHER_PORT"):
+        return True
+    # PyDev-compatible debugger markers.
+    if os.getenv("PYDEVD_USE_FRAME_EVAL") or os.getenv("PYDEVD_LOAD_VALUES_ASYNC"):
+        return True
+    return False
+
+
 # Run main only when executed as a script.
 if __name__ == "__main__":
     # Capture script exit code.
     exit_code = main()
     # In debugger sessions, avoid raising SystemExit which is often treated as an exception stop.
-    if sys.gettrace() is not None:
+    if running_under_debugger():
         # Print final status and return control to debugger.
         if exit_code != 0:
             print(f"Script finished with exit code {exit_code}. Check log/run.log for details.")
