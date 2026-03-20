@@ -621,13 +621,30 @@ def write_result_header(result_file: Path, host: str, commands_file: Path) -> No
         file_obj.write(header)
 
 
-def append_command_result(result_file: Path, command: str, output: str) -> None:
+def append_command_result(
+    result_file: Path,
+    command: str,
+    output: str,
+    started_at: str | None = None,
+    finished_at: str | None = None,
+    elapsed_seconds: float | None = None,
+) -> None:
     # Sanitize output before writing to file.
     cleaned_output = sanitize_output(output)
+    # Build optional execution timing lines.
+    timing_lines = ""
+    if started_at is not None:
+        timing_lines += f"[START] {started_at}\n"
+    if finished_at is not None:
+        timing_lines += f"[END] {finished_at}\n"
+    if elapsed_seconds is not None:
+        timing_lines += f"[DURATION] {elapsed_seconds:.3f}s\n"
     # Build per-command output block.
     block = (
         # Command title line.
         f"\n[COMMAND] {command}\n"
+        # Optional command timing metadata.
+        f"{timing_lines}"
         # Divider line.
         f"{'-' * 80}\n"
         # Command output or fallback marker.
@@ -783,6 +800,9 @@ def run_commands(
         ensure_session_time_budget()
         # Compute remaining device-level budget.
         remaining_budget = max(1, int(session_timeout - (time.monotonic() - started_at)))
+        # Track per-command timing.
+        command_started_monotonic = time.monotonic()
+        command_started_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # Log command start for this host.
         logger.info("[%s] Executing command: %s", host, command)
         # Send command and trailing newline to shell.
@@ -800,8 +820,18 @@ def run_commands(
             # For command output, enforce >2 minute floor.
             enforce_min_timeout=True,
         )
+        # Finalize per-command timing.
+        command_finished_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        command_elapsed_seconds = time.monotonic() - command_started_monotonic
         # Append command output block to result file.
-        append_command_result(result_file, command, output)
+        append_command_result(
+            result_file,
+            command,
+            output,
+            started_at=command_started_text,
+            finished_at=command_finished_text,
+            elapsed_seconds=command_elapsed_seconds,
+        )
         # Log command completion for this host.
         logger.info("[%s] Finished command: %s", host, command)
 
