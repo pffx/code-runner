@@ -44,6 +44,10 @@ ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 OTHER_ESCAPE_RE = re.compile(r"\x1B[@-_]")
 # Minimum timeout threshold in seconds (must be greater than 2 minutes).
 MIN_COMMAND_TIMEOUT_SECONDS = 121
+# Built-in command to suppress device alarms during script execution.
+SETUP_INHIBIT_ALARMS_COMMAND = "environment inhibit-alarms"
+# Built-in default prompt used by script execution.
+DEFAULT_SCRIPT_PROMPT = "script>#"
 
 
 def parse_args() -> argparse.Namespace:
@@ -794,6 +798,57 @@ def run_commands(
         # Persist banner in result file.
         append_command_result(result_file, "__SESSION_BANNER__", banner)
 
+    # Resolve the prompt value used by setup and subsequent command completion detection.
+    effective_prompt = prompt or DEFAULT_SCRIPT_PROMPT
+    # Escape double quotes for the inline prompt command argument.
+    prompt_value_for_command = effective_prompt.replace('"', '\\"')
+    # Built-in setup commands executed before commands.txt content.
+    setup_commands = [
+        SETUP_INHIBIT_ALARMS_COMMAND,
+        f'environment prompt "{prompt_value_for_command}"',
+    ]
+
+    # Run built-in setup commands first to stabilize device output and prompt matching.
+    for setup_command in setup_commands:
+        # Ensure device execution has not exceeded session timeout.
+        ensure_session_time_budget()
+        # Compute remaining device-level budget.
+        remaining_budget = max(1, int(session_timeout - (time.monotonic() - started_at)))
+        # Track per-command timing.
+        command_started_monotonic = time.monotonic()
+        command_started_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Log setup command start.
+        logger.info("[%s] Executing setup command: %s", host, setup_command)
+        # Send setup command and trailing newline to shell.
+        channel.send(setup_command + "\n")
+        # Read setup command output from channel.
+        setup_output = read_channel_output(
+            # Current shell channel.
+            channel,
+            # Idle output settle interval.
+            idle_wait=command_interval,
+            # Hard command timeout.
+            timeout=min(command_timeout, remaining_budget),
+            # Use fallback/heuristic prompt detection while setup prompt may be changing.
+            expected_prompt=None,
+            # For command output, enforce >2 minute floor.
+            enforce_min_timeout=True,
+        )
+        # Finalize per-command timing.
+        command_finished_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        command_elapsed_seconds = time.monotonic() - command_started_monotonic
+        # Append setup command output block to result file.
+        append_command_result(
+            result_file,
+            setup_command,
+            setup_output,
+            started_at=command_started_text,
+            finished_at=command_finished_text,
+            elapsed_seconds=command_elapsed_seconds,
+        )
+        # Log setup command completion.
+        logger.info("[%s] Finished setup command: %s", host, setup_command)
+
     # Iterate commands in order.
     for command in commands:
         # Ensure device execution has not exceeded session timeout.
@@ -816,7 +871,7 @@ def run_commands(
             # Hard command timeout.
             timeout=min(command_timeout, remaining_budget),
             # Prompt text to determine command completion.
-            expected_prompt=prompt,
+            expected_prompt=effective_prompt,
             # For command output, enforce >2 minute floor.
             enforce_min_timeout=True,
         )
@@ -1048,25 +1103,12 @@ def main() -> int:
         return 1
 
 
-def running_under_debugger() -> bool:
-    # Generic runtime debugger hook used by debuggers and tracers.
-    if sys.gettrace() is not None:
-        return True
-    # VS Code / debugpy launcher marker.
-    if os.getenv("DEBUGPY_LAUNCHER_PORT"):
-        return True
-    # PyDev-compatible debugger markers.
-    if os.getenv("PYDEVD_USE_FRAME_EVAL") or os.getenv("PYDEVD_LOAD_VALUES_ASYNC"):
-        return True
-    return False
-
-
 # Run main only when executed as a script.
 if __name__ == "__main__":
     # Capture script exit code.
     exit_code = main()
     # In debugger sessions, avoid raising SystemExit which is often treated as an exception stop.
-    if running_under_debugger():
+    if sys.gettrace() is not None:
         # Print final status and return control to debugger.
         if exit_code != 0:
             print(f"Script finished with exit code {exit_code}. Check log/run.log for details.")

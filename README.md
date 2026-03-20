@@ -107,13 +107,14 @@
 
 - 空行会被忽略
 - 以 `#` 开头的行会被忽略
-- 建议第一条命令先关闭分页
+- 脚本会自动先执行以下内置初始化命令，无需写入 `commands.txt`：
+  - `environment inhibit-alarms`
+  - `environment prompt "script>#"`（可通过 `--prompt` 覆盖）
+- 建议第一条业务命令先关闭分页
 
 示例：
 
 ```text
-environment inhibit-alarms
-environment prompt "script>#"
 show software-mngt oswp
 show equipment slot
 show equipment ont interface
@@ -236,8 +237,8 @@ log/failed_devices.log
 
 ## Prompt 检测说明
 
-- 脚本登录后会先自动识别设备原始 prompt。
-- 如果命令中修改了 prompt（例如 `environment prompt "script>#"`），后续命令会自动使用新 prompt 进行完成判定。
+- 脚本登录后会先自动执行内置命令 `environment prompt "script>#"` 作为默认 prompt。
+- 如果你传入 `--prompt`，脚本会改为执行 `environment prompt "<你的prompt>"`，并使用该值做完成判定。
 - 运行日志会输出以下信息，便于排查：
   - `Prompt value (configured)`
   - `Prompt value (detected)`
