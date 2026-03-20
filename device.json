@@ -1,0 +1,16 @@
+{
+  "devices": [
+    {
+      "host": "135.251.214.94",
+      "port": 22,
+      "username": "isadmins",
+      "password": "ans#150"
+    },
+    {
+      "host": "135.251.214.93",
+      "port": 22,
+      "username": "aluadmin",
+      "password": "alu#1502"
+    }
+  ]
+}

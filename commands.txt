@@ -1,0 +1,5 @@
+environment inhibit-alarms
+environment prompt "script>#"
+show software-mngt 
+show equipment slot
+show equipment ont interface
