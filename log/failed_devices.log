@@ -1,0 +1,14 @@
+
+================================================================================
+Run Time: 2026-03-20 19:32:02
+Failed Devices Count: 2
+================================================================================
+Host=135.251.214.94 | Reason=timeout | Error=timed out | ResultFile=/home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_193129.log
+Host=135.251.214.93 | Reason=timeout | Error=timed out | ResultFile=/home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_193129.log
+
+================================================================================
+Run Time: 2026-03-20 20:12:31
+Failed Devices Count: 2
+================================================================================
+Host=135.251.214.94 | Reason=timeout | Error=timed out | ResultFile=/home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_201159.log
+Host=135.251.214.93 | Reason=timeout | Error=timed out | ResultFile=/home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_201159.log

@@ -1,0 +1,92 @@
+2026-03-20 19:31:29 | INFO | Loaded 2 device(s) from /home/phonix/myWorkDir/code/git/code-runner/device.json
+2026-03-20 19:31:29 | INFO | [135.251.214.94] Starting SSH session to 135.251.214.94:22 (attempt 1/3)
+2026-03-20 19:31:29 | INFO | [135.251.214.94] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_193129.log
+2026-03-20 19:31:29 | INFO | [135.251.214.93] Starting SSH session to 135.251.214.93:22 (attempt 1/3)
+2026-03-20 19:31:29 | INFO | [135.251.214.93] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_193129.log
+2026-03-20 19:31:39 | ERROR | [135.251.214.94] Timeout: timed out
+2026-03-20 19:31:39 | WARNING | [135.251.214.94] Attempt 1/3 failed: timed out; retrying...
+2026-03-20 19:31:39 | ERROR | [135.251.214.93] Timeout: timed out
+2026-03-20 19:31:39 | WARNING | [135.251.214.93] Attempt 1/3 failed: timed out; retrying...
+2026-03-20 19:31:40 | INFO | [135.251.214.94] Starting SSH session to 135.251.214.94:22 (attempt 2/3)
+2026-03-20 19:31:40 | INFO | [135.251.214.94] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_193129.log
+2026-03-20 19:31:40 | INFO | [135.251.214.93] Starting SSH session to 135.251.214.93:22 (attempt 2/3)
+2026-03-20 19:31:40 | INFO | [135.251.214.93] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_193129.log
+2026-03-20 19:31:50 | ERROR | [135.251.214.94] Timeout: timed out
+2026-03-20 19:31:50 | WARNING | [135.251.214.94] Attempt 2/3 failed: timed out; retrying...
+2026-03-20 19:31:50 | ERROR | [135.251.214.93] Timeout: timed out
+2026-03-20 19:31:50 | WARNING | [135.251.214.93] Attempt 2/3 failed: timed out; retrying...
+2026-03-20 19:31:51 | INFO | [135.251.214.94] Starting SSH session to 135.251.214.94:22 (attempt 3/3)
+2026-03-20 19:31:51 | INFO | [135.251.214.94] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_193129.log
+2026-03-20 19:31:51 | INFO | [135.251.214.93] Starting SSH session to 135.251.214.93:22 (attempt 3/3)
+2026-03-20 19:31:51 | INFO | [135.251.214.93] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_193129.log
+2026-03-20 19:32:01 | ERROR | [135.251.214.94] Timeout: timed out
+2026-03-20 19:32:01 | ERROR | [135.251.214.94] Execution failed: timed out
+Traceback (most recent call last):
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 874, in execute_device
+    client = connect_ssh(
+             ^^^^^^^^^^^^
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 667, in connect_ssh
+    client.connect(
+  File "/home/phonix/myWorkDir/code/git/code-runner/.venv/lib/python3.12/site-packages/paramiko/client.py", line 384, in connect
+    sock.connect(addr)
+TimeoutError: timed out
+2026-03-20 19:32:02 | ERROR | [135.251.214.93] Timeout: timed out
+2026-03-20 19:32:02 | ERROR | [135.251.214.93] Execution failed: timed out
+Traceback (most recent call last):
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 874, in execute_device
+    client = connect_ssh(
+             ^^^^^^^^^^^^
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 667, in connect_ssh
+    client.connect(
+  File "/home/phonix/myWorkDir/code/git/code-runner/.venv/lib/python3.12/site-packages/paramiko/client.py", line 384, in connect
+    sock.connect(addr)
+TimeoutError: timed out
+2026-03-20 19:32:02 | ERROR | Failure reason summary: {'timeout': 2}
+2026-03-20 19:32:02 | ERROR | Failed devices report written to: /home/phonix/myWorkDir/code/git/code-runner/log/failed_devices.log
+2026-03-20 19:32:02 | ERROR | Completed with 2 failed device(s)
+2026-03-20 20:11:59 | INFO | Loaded 2 device(s) from /home/phonix/myWorkDir/code/git/code-runner/device.json
+2026-03-20 20:11:59 | INFO | [135.251.214.93] Starting SSH session to 135.251.214.93:22 (attempt 1/3)
+2026-03-20 20:11:59 | INFO | [135.251.214.93] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_201159.log
+2026-03-20 20:11:59 | INFO | [135.251.214.94] Starting SSH session to 135.251.214.94:22 (attempt 1/3)
+2026-03-20 20:11:59 | INFO | [135.251.214.94] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_201159.log
+2026-03-20 20:12:09 | ERROR | [135.251.214.93] Timeout: timed out
+2026-03-20 20:12:09 | WARNING | [135.251.214.93] Attempt 1/3 failed: timed out; retrying...
+2026-03-20 20:12:09 | ERROR | [135.251.214.94] Timeout: timed out
+2026-03-20 20:12:09 | WARNING | [135.251.214.94] Attempt 1/3 failed: timed out; retrying...
+2026-03-20 20:12:10 | INFO | [135.251.214.94] Starting SSH session to 135.251.214.94:22 (attempt 2/3)
+2026-03-20 20:12:10 | INFO | [135.251.214.94] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_201159.log
+2026-03-20 20:12:10 | INFO | [135.251.214.93] Starting SSH session to 135.251.214.93:22 (attempt 2/3)
+2026-03-20 20:12:10 | INFO | [135.251.214.93] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_201159.log
+2026-03-20 20:12:20 | ERROR | [135.251.214.93] Timeout: timed out
+2026-03-20 20:12:20 | ERROR | [135.251.214.94] Timeout: timed out
+2026-03-20 20:12:20 | WARNING | [135.251.214.93] Attempt 2/3 failed: timed out; retrying...
+2026-03-20 20:12:20 | WARNING | [135.251.214.94] Attempt 2/3 failed: timed out; retrying...
+2026-03-20 20:12:21 | INFO | [135.251.214.94] Starting SSH session to 135.251.214.94:22 (attempt 3/3)
+2026-03-20 20:12:21 | INFO | [135.251.214.94] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.94_result_20260320_201159.log
+2026-03-20 20:12:21 | INFO | [135.251.214.93] Starting SSH session to 135.251.214.93:22 (attempt 3/3)
+2026-03-20 20:12:21 | INFO | [135.251.214.93] Result file: /home/phonix/myWorkDir/code/git/code-runner/135.251.214.93_result_20260320_201159.log
+2026-03-20 20:12:31 | ERROR | [135.251.214.94] Timeout: timed out
+2026-03-20 20:12:31 | ERROR | [135.251.214.94] Execution failed: timed out
+Traceback (most recent call last):
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 874, in execute_device
+    client = connect_ssh(
+             ^^^^^^^^^^^^
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 667, in connect_ssh
+    client.connect(
+  File "/home/phonix/myWorkDir/code/git/code-runner/.venv/lib/python3.12/site-packages/paramiko/client.py", line 384, in connect
+    sock.connect(addr)
+TimeoutError: timed out
+2026-03-20 20:12:31 | ERROR | [135.251.214.93] Timeout: timed out
+2026-03-20 20:12:31 | ERROR | [135.251.214.93] Execution failed: timed out
+Traceback (most recent call last):
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 874, in execute_device
+    client = connect_ssh(
+             ^^^^^^^^^^^^
+  File "/home/phonix/myWorkDir/code/git/code-runner/ssh_command_runner.py", line 667, in connect_ssh
+    client.connect(
+  File "/home/phonix/myWorkDir/code/git/code-runner/.venv/lib/python3.12/site-packages/paramiko/client.py", line 384, in connect
+    sock.connect(addr)
+TimeoutError: timed out
+2026-03-20 20:12:31 | ERROR | Failure reason summary: {'timeout': 2}
+2026-03-20 20:12:31 | ERROR | Failed devices report written to: /home/phonix/myWorkDir/code/git/code-runner/log/failed_devices.log
+2026-03-20 20:12:31 | ERROR | Completed with 2 failed device(s)
