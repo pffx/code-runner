@@ -19,8 +19,16 @@ from pathlib import Path
 import paramiko
 
 
-# The directory that contains this script file.
-BASE_DIR = Path(__file__).resolve().parent
+def get_base_dir() -> Path:
+    # When packaged as a one-file executable, read sibling config files next to the executable.
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    # In normal script mode, use the script directory.
+    return Path(__file__).resolve().parent
+
+
+# The working base directory for default input/output paths.
+BASE_DIR = get_base_dir()
 # Default device configuration path.
 DEFAULT_DEVICE_FILE = BASE_DIR / "device.json"
 # Default commands file path.
