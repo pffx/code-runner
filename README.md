@@ -27,7 +27,9 @@
 - `commands.txt`
   要执行的设备命令列表
 - `log/run.log`
-  脚本运行日志
+  脚本汇总日志（设备级详细日志见下方）
+- `log/<设备IP>_run.log`
+  每台设备独立运行日志
 - `log/failed_devices.log`
   失败设备清单（默认路径，可通过参数修改）
 - `<设备IP>_result_<时间戳>.log`
@@ -172,13 +174,23 @@ show equipment ont interface
 
 ### 运行日志
 
-运行日志统一写入：
+汇总日志写入：
 
 ```text
 log/run.log
 ```
 
-日志中会带设备 IP 前缀，方便区分并发执行时的输出。
+每台设备详细日志写入：
+
+```text
+log/<设备IP>_run_<时间戳>.log
+```
+
+例如：
+
+```text
+log/135.251.214.93_run_20260321_101530.log
+```
 
 并且会输出失败原因分类统计信息。
 

@@ -28,6 +28,10 @@ def get_base_dir() -> Path:
 
 
 # The working base directory for default input/output paths.
+
+
+
+
 BASE_DIR = get_base_dir()
 # Default device configuration path.
 DEFAULT_DEVICE_FILE = BASE_DIR / "device.json"
@@ -335,6 +339,43 @@ def setup_logging(log_file: Path) -> logging.Logger:
     stream_handler.setFormatter(formatter)
     # Attach stream handler to logger.
     logger.addHandler(stream_handler)
+
+    # Return configured logger.
+    return logger
+
+
+def build_device_log_file(host: str, summary_log_file: Path, run_timestamp: str) -> Path:
+    # Replace unsafe filename characters in host for file safety.
+    safe_host = re.sub(r"[^A-Za-z0-9._-]", "_", host)
+    # Store per-device logs next to summary run.log.
+    return summary_log_file.parent / f"{safe_host}_run_{run_timestamp}.log"
+
+
+def setup_device_logging(host: str, log_file: Path) -> logging.Logger:
+    # Ensure parent log directory exists.
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Build/reuse per-device named logger.
+    logger = logging.getLogger(f"ssh_command_runner.device.{host}")
+    # Set minimum log level.
+    logger.setLevel(logging.INFO)
+    # Disable propagation to avoid duplicate writes in summary logger.
+    logger.propagate = False
+    # Remove existing handlers to avoid duplicates.
+    logger.handlers.clear()
+
+    # Shared log formatter for device log files.
+    formatter = logging.Formatter(
+        # Log output format.
+        "%(asctime)s | %(levelname)s | %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
+
+    # Create file handler for per-device runtime logs.
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    # Apply formatter to file handler.
+    file_handler.setFormatter(formatter)
+    # Attach file handler to logger.
+    logger.addHandler(file_handler)
 
     # Return configured logger.
     return logger
@@ -903,6 +944,8 @@ def execute_device(
     commands_file: Path,
     # Shared logger instance.
     logger: logging.Logger,
+    # Shared timestamp for this whole run.
+    run_timestamp: str,
     # Single device dictionary.
     device_info: dict[str, object],
 ) -> tuple[str, bool, Path | None, str | None, str | None]:
@@ -912,6 +955,13 @@ def execute_device(
     host = str(connection_info["host"])
     # Build per-run result file path for this host.
     result_file = build_result_file(host, args.result_file)
+    # Build per-device runtime log path.
+    summary_log_file = Path(args.log_file).expanduser().resolve()
+    device_log_file = build_device_log_file(host, summary_log_file, run_timestamp)
+    # Initialize per-device logger.
+    device_logger = setup_device_logging(host, device_log_file)
+    # Write one summary line to show where per-device logs are stored.
+    logger.info("[%s] Device runtime log file: %s", host, device_log_file)
 
     # Retry per device for transient failures.
     for attempt in range(1, args.retries + 1):
@@ -921,9 +971,9 @@ def execute_device(
             if attempt == 1:
                 write_result_header(result_file, host, commands_file)
             # Log SSH session start with attempt index.
-            logger.info("[%s] Starting SSH session to %s:%s (attempt %s/%s)", host, host, connection_info["port"], attempt, args.retries)
+            device_logger.info("[%s] Starting SSH session to %s:%s (attempt %s/%s)", host, host, connection_info["port"], attempt, args.retries)
             # Log chosen result file path.
-            logger.info("[%s] Result file: %s", host, result_file)
+            device_logger.info("[%s] Result file: %s", host, result_file)
 
             # Establish SSH connection.
             client = connect_ssh(
@@ -949,7 +999,7 @@ def execute_device(
                     # Result file path.
                     result_file=result_file,
                     # Shared logger.
-                    logger=logger,
+                    logger=device_logger,
                     # Host label.
                     host=host,
                     # Prompt text.
@@ -966,14 +1016,14 @@ def execute_device(
                 client.close()
 
             # Log successful completion for this host.
-            logger.info("[%s] Execution completed successfully", host)
+            device_logger.info("[%s] Execution completed successfully", host)
             # Return success tuple.
             return host, True, result_file, None, None
         # Catch all exceptions for this device attempt.
         except Exception as exc:
             # Normalize common network timeout to readable error type.
             if isinstance(exc, (socket.timeout, TimeoutError)):
-                logger.error("[%s] Timeout: %s", host, exc)
+                device_logger.error("[%s] Timeout: %s", host, exc)
             # Decide whether this failure type should be retried.
             retryable = should_retry(exc)
             # If this is the last attempt or non-retryable failure, exit.
@@ -981,11 +1031,11 @@ def execute_device(
                 # Classify failure reason for summary reporting.
                 failure_reason = classify_failure(exc)
                 # Log full exception with traceback.
-                logger.exception("[%s] Execution failed: %s", host, exc)
+                device_logger.exception("[%s] Execution failed: %s", host, exc)
                 # Return failure tuple.
                 return host, False, result_file, failure_reason, str(exc)
             # Log retry action for this device.
-            logger.warning("[%s] Attempt %s/%s failed: %s; retrying...", host, attempt, args.retries, exc)
+            device_logger.warning("[%s] Attempt %s/%s failed: %s; retrying...", host, attempt, args.retries, exc)
             # Small backoff before retry.
             time.sleep(1)
 
@@ -1002,6 +1052,8 @@ def run_parallel(
     commands_file: Path,
     # Shared logger.
     logger: logging.Logger,
+    # Shared timestamp for this whole run.
+    run_timestamp: str,
     # List of devices to execute.
     device_list: list[dict[str, object]],
 ) -> int:
@@ -1017,7 +1069,7 @@ def run_parallel(
         # Submit one future per device.
         futures = [
             # Schedule device execution task.
-            executor.submit(execute_device, args, commands, commands_file, logger, device_info)
+            executor.submit(execute_device, args, commands, commands_file, logger, run_timestamp, device_info)
             # Iterate all device records.
             for device_info in device_list
         ]
@@ -1079,6 +1131,8 @@ def main() -> int:
     commands_file = Path(args.commands_file).expanduser().resolve()
     # Resolve runtime log file path.
     log_file = Path(args.log_file).expanduser().resolve()
+    # Build one timestamp for this whole run.
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Initialize shared logger.
     logger = setup_logging(log_file)
@@ -1094,7 +1148,7 @@ def main() -> int:
         # Log number of loaded devices.
         logger.info("Loaded %s device(s) from %s", len(device_list), device_file)
         # Run multi-device execution and return exit code.
-        return run_parallel(args, commands, commands_file, logger, device_list)
+        return run_parallel(args, commands, commands_file, logger, run_timestamp, device_list)
     # Catch and log any top-level error.
     except Exception as exc:
         # Log full traceback for diagnostics.
