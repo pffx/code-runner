@@ -52,6 +52,23 @@ MIN_COMMAND_TIMEOUT_SECONDS = 121
 SETUP_INHIBIT_ALARMS_COMMAND = "environment inhibit-alarms"
 # Built-in default prompt used by script execution.
 DEFAULT_SCRIPT_PROMPT = "script>#"
+# Keywords indicating command execution failure in device output.
+COMMAND_FAILURE_PATTERNS = (
+    re.compile(r"Error\s*:", re.IGNORECASE),
+    re.compile(r"Warning:", re.IGNORECASE),
+    re.compile(r"invalid token", re.IGNORECASE),
+)
+
+
+class CommandExecutionError(RuntimeError):
+    # Raised when device output indicates command execution failure.
+    def __init__(self, command: str, errors: list[str]) -> None:
+        # Keep the failed command for reporting.
+        self.command = command
+        # Keep matched device error lines for reporting.
+        self.errors = errors
+        # Build readable exception text.
+        super().__init__(f"Command={command}; DeviceErrors={' || '.join(errors)}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -626,6 +643,26 @@ def sanitize_output(output: str) -> str:
     return cleaned
 
 
+def extract_command_failure_lines(output: str) -> list[str]:
+    # Sanitize output before keyword matching to avoid ANSI/control artifacts.
+    cleaned_output = sanitize_output(output)
+    # Collect matched lines containing failure keywords.
+    matched_lines: list[str] = []
+    # Check each output line for failure keywords.
+    for line in cleaned_output.splitlines():
+        # Remove surrounding whitespace for cleaner reporting.
+        stripped = line.strip()
+        # Skip empty lines.
+        if not stripped:
+            continue
+        # Keep lines matching any configured failure pattern.
+        if any(pattern.search(stripped) for pattern in COMMAND_FAILURE_PATTERNS):
+            matched_lines.append(stripped)
+
+    # Deduplicate while preserving original order.
+    return list(dict.fromkeys(matched_lines))
+
+
 def build_result_file(host: str, configured_result_file: str | None) -> Path:
     # Use explicit result file when provided.
     if configured_result_file:
@@ -748,6 +785,9 @@ def should_retry(exc: Exception) -> bool:
 
 
 def classify_failure(exc: Exception) -> str:
+    # Command output reported explicit execution errors.
+    if isinstance(exc, CommandExecutionError):
+        return "command"
     # Authentication issue category.
     if isinstance(exc, paramiko.AuthenticationException):
         return "authentication"
@@ -887,6 +927,16 @@ def run_commands(
             finished_at=command_finished_text,
             elapsed_seconds=command_elapsed_seconds,
         )
+        # Treat known error keywords in device output as command failure.
+        setup_failure_lines = extract_command_failure_lines(setup_output)
+        if setup_failure_lines:
+            logger.error(
+                "[%s] Setup command reported failure keywords: %s | %s",
+                host,
+                setup_command,
+                " || ".join(setup_failure_lines),
+            )
+            raise CommandExecutionError(setup_command, setup_failure_lines)
         # Log setup command completion.
         logger.info("[%s] Finished setup command: %s", host, setup_command)
 
@@ -928,6 +978,16 @@ def run_commands(
             finished_at=command_finished_text,
             elapsed_seconds=command_elapsed_seconds,
         )
+        # Treat known error keywords in device output as command failure.
+        command_failure_lines = extract_command_failure_lines(output)
+        if command_failure_lines:
+            logger.error(
+                "[%s] Command reported failure keywords: %s | %s",
+                host,
+                command,
+                " || ".join(command_failure_lines),
+            )
+            raise CommandExecutionError(command, command_failure_lines)
         # Log command completion for this host.
         logger.info("[%s] Finished command: %s", host, command)
 
