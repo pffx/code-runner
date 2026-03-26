@@ -56,6 +56,7 @@ DEFAULT_SCRIPT_PROMPT = "script>#"
 COMMAND_FAILURE_PATTERNS = (
     re.compile(r"Error\s*:", re.IGNORECASE),
     re.compile(r"Warning:", re.IGNORECASE),
+    re.compile(r"MINOR:", re.IGNORECASE),
     re.compile(r"invalid token", re.IGNORECASE),
 )
 
